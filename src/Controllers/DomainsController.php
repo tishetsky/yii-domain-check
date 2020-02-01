@@ -40,14 +40,24 @@ class DomainsController extends Controller
             throw new BadRequestHttpException();
         }
 
+        $command = Yii::$app->db->createCommand('SELECT * FROM tld');
+        $tlds = $command->queryAll();
+
+        /** @var DomainDto[] $dtos */
+        $dtos = [];
+
+        foreach ($tlds as $tld) {
+            $domain = sprintf('%s.%s', $params->search, $tld['tld']);
+            $domainId = $command->setSql('SELECT id FROM domain WHERE domain = :domain')->bindValue('domain', $domain)->queryScalar();
+            $dtos[] = new DomainDto($tld['tld'], $domain, $tld['price'], empty($domainId));
+        }
+
         // todo найти список tld из таблицы
         // todo создать список доменов
         // todo проверить домены на корректность имени
         // todo проверить наличие домена в таблице domain
         // todo создать список dto с ценами для списка доменов
 
-        /** @var DomainDto[] $dtos */
-        $dtos = [];
         return $dtos;
     }
 }
